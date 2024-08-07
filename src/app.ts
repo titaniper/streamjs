@@ -4,7 +4,7 @@ import { globalRouter } from './routes';
 
 const app = new Koa();
 
-// ====== Do not change the order of the following middlewares =======> @see https://github.com/Ecube-Labs/notification-service/pull/5
+// ====== Do not change the order of the following middlewares =======> 
 app.use(uuidMiddleware);
 app.use(requestLoggerMiddleware);
 app.use(errorHandlerMiddleware);
