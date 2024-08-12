@@ -1,3 +1,10 @@
-# kafka-streams-ts
+# streamjs
 
-Node 에서 동작하는 Kafka Connect, Streams 만들기 컨셉.
+Libraries that make it easy to implement event streams in your NodeJS environment
+
+## Support
+Kafka
+
+## Upcoming
+Flink
+Spark
