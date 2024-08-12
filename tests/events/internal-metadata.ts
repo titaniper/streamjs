@@ -4,7 +4,7 @@
 2. prefix O
 3. filter O
 4. metadata x (null)
-5. route ben.extenral.event
+5. route ben.external.event
  */
 export const internalMetadata = {
     schema: {

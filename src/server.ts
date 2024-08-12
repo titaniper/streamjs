@@ -7,7 +7,14 @@ import { ExternalDddEventRouter, InternalDddEventRouter } from './libs/event-pip
 
 async function main() {
     const kafkaEventPipeline = await initKafkaEventPipeline();
-    await kafkaEventPipeline.start();
+    try {
+        kafkaEventPipeline.start().catch((error) => {
+            console.log('ererer222');
+        });;
+    } catch (error) {
+        console.log('main gogo')
+        throw error;
+    }
 
     const port = config.server.port;
     const server = app.listen(port);
@@ -33,10 +40,10 @@ async function initKafkaEventPipeline() {
         name: config.kafka.clientId,
         topics: [
             'debezium.ben.ddd_event',
-            'debezium.ben.all.ddd_event',
+            // NOTE: internal 재처리 하지 않도록
             'ben.internal.event',
-            'debezium.prefixA.ddd_event',
-            'debezium.prefixB.ddd_event',
+            'debezium.external.filter.ddd_event',
+            'debezium.external.nofilter.ddd_event',
             'debezium.kill.ddd_event',
         ],
         kafka: {
@@ -44,18 +51,18 @@ async function initKafkaEventPipeline() {
         },
     });
 
-    eventPipeline.addProcessor(new PrefixProcessor([{ topic: 'debezium.prefixA.ddd_event', prefix: 'A' }, { topic: 'debezium.prefixB.ddd_event', prefix: 'B' }]));
+    eventPipeline.addProcessor(new PrefixProcessor([{ topic: 'debezium.external.filter.ddd_event', prefix: 'A' }]));
     eventPipeline.addRoute(new InternalDddEventRouter());
     eventPipeline.addRoute(new ExternalDddEventRouter({
         rules: [
             {
-                sourceTopic: 'debezium.ben.ddd_event',
-                filteringEvent: ['ExternalEvent'],
-                sinkTopic: 'ben.extenral.event',
+                sourceTopic: 'debezium.external.filter.ddd_event',
+                filteringEvent: ['TargetEvent'],
+                sinkTopic: 'ben.external.event',
             },
             {
-                sourceTopic: 'debezium.ben.all.ddd_event',
-                sinkTopic: 'ben.extenral.event',
+                sourceTopic: 'debezium.external.nofilter.ddd_event',
+                sinkTopic: 'ben.external.event',
             }
         ]
     }));

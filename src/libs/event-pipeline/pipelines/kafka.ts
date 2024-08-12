@@ -19,12 +19,21 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
         };
     }) {
         super();
-        this.kafkaClient = new Kafka({
+        console.log('KafkaEventPipeline constructor', {
             clientId: config.name,
             brokers: config.kafka.brokers,
         });
+        this.kafkaClient = new Kafka({
+            clientId: config.name,
+            brokers: config.kafka.brokers,
+            retry: {
+                retries: 1,
+            },
+        });
         this.kafkaProducer = this.kafkaClient.producer({ transactionalId: config.name });
-        this.kafkaConsumer = this.kafkaClient.consumer({ groupId: config.name });
+        this.kafkaConsumer = this.kafkaClient.consumer({ groupId: config.name, retry: {
+            retries: 1,
+        } });
         this.subscribedTopics = config.topics;
     }
 
@@ -33,22 +42,32 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
         try {
             for (const record of records) {
                 const sinkTopics = await this.getSinkTopics(record);
+                console.log('sinkTopics', sinkTopics);
                 if (sinkTopics.length) {
                     const processedMessage = await this.processMessage(record);
+                    console.log('processedMessage', processedMessage.message.value);
                     await Promise.all(
                         sinkTopics.map((topic) =>
-                            this.kafkaProducer.send({
+                            transaction.send({
                                 topic,
                                 messages: [processedMessage.message],
                             }),
                         ),
                     );
+
+                    // NOTE: 임시
+                    const kafkaMessage = JSON.parse(record.message.value.toString());
+                    const dddEvent = kafkaMessage.payload.after;
+                    if (dddEvent.type === 'KillEvent') {
+                        throw new Error('KillEvent');
+                    }
                 }
             }
             await transaction.commit();
         } catch (error) {
             await transaction.abort();
-            logger.error('Transaction aborted due to error', { error });
+            console.log('error 1');
+            // logger.error('Transaction aborted due to error', { error });
             throw error;
         }
     }
@@ -68,22 +87,43 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
     }
 
     async start(): Promise<void> {
-        await Promise.all([this.kafkaProducer.connect(), this.kafkaConsumer.connect()]);
-        await Promise.all([
-            this.kafkaConsumer.subscribe({
-                topics: this.subscribedTopics,
-                fromBeginning: false,
-            }),
-            this.kafkaConsumer.run({
-                eachMessage: async (payload) => {
+        // NOTE: 동시에 connect 하면 에러난다.
+        // await Promise.all([this.kafkaProducer.connect(), await this.kafkaConsumer.connect()]);
+        await this.kafkaProducer.connect();
+        await this.kafkaConsumer.connect();
+
+        // NOTE: run 먼저 할 수 없음
+        //         signment":{},"groupProtocol":"RoundRobinAssigner","duration":8850}
+        // KafkaJSNonRetriableError: Cannot subscribe to topic while consumer is running
+        //     at Object.sub
+        await this.kafkaConsumer.subscribe({
+            topics: this.subscribedTopics,
+            fromBeginning: false,
+        });
+        // https://github.com/tulios/kafkajs/blob/master/src/consumer/runner.js#L218
+        this.kafkaConsumer.run({
+            eachMessage: async (payload) => {
+                try {
                     await this.put([payload]);
-                },
-            }),
-        ]);
+                } catch (error) {
+                    console.log('rrrrr consome');
+                    // throw new Error('💣')
+                    throw error
+                }
+            },
+        })
+        // NOTE: 동작안함
+        .catch((error) => {
+            console.log('kafkaConsumer ererererer'); 
+        });;
+        // this.kafkaConsumer.on('error', (err) => {
+
+        // });
     }
 
     async stop(): Promise<void> {
         await Promise.all([this.kafkaProducer.disconnect(), this.kafkaConsumer.disconnect()]);
+
     }
 }
 

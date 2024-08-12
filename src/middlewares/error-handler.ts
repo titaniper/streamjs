@@ -33,6 +33,8 @@ export const errorHandlerMiddleware: Middleware = async (ctx, next) => {
             errorMessage: errorMessage ?? 'An unexpected error has occurred. Please try again.', // TODO: unexpected_error
         };
 
+        console.log('ererererer');
+
         logger
             .child(getLoggingContext(ctx, ['error']))
             .error(err.message ?? 'An unexpected error has occurred. Please try again.', { err });
