@@ -1,4 +1,4 @@
-import * as Koa from 'koa';
+import Koa from 'koa';
 import { errorHandlerMiddleware, requestLoggerMiddleware, uuidMiddleware } from './middlewares';
 import { globalRouter } from './routes';
 

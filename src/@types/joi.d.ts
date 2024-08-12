@@ -1,10 +1,10 @@
-import * as joi from '@hapi/joi';
+import * as Joi from 'joi';
 
 type ArrayType<T> = T extends (infer U)[] ? U : never;
 
-declare module '@hapi/joi' {
+declare module 'joi' {
     interface Root {
-        extend(...extensions: Array<joi.Extension | joi.ExtensionFactory>): this;
+        extend(...extensions: Array<Joi.Extension | Joi.ExtensionFactory>): this;
 
         any<T extends any>(): BoxAnySchema<Box<T, false>>;
 
@@ -55,7 +55,7 @@ declare module '@hapi/joi' {
     type BoxSchema = Box<any, boolean>;
 
     type primitiveType = string | number | boolean | Function | Date | undefined | null | void;
-    type mappedSchema = joi.SchemaLike | BoxedPrimitive;
+    type mappedSchema = Joi.SchemaLike | BoxedPrimitive;
     type mappedSchemaMap = { [K: string]: mappedSchema };
     type extendsGuard<T, S> = S extends T ? S : T;
 
@@ -73,7 +73,7 @@ declare module '@hapi/joi' {
         | BoxObjectSchema<T>
         | BoxAlternativesSchema<T>;
 
-    interface BoxAnySchema<N extends Box<any, boolean>> extends joi.AnySchema {
+    interface BoxAnySchema<N extends Box<any, boolean>> extends Joi.AnySchema {
         __schemaTypeLiteral: 'BoxAnySchema';
 
         default<T>(
@@ -101,7 +101,7 @@ declare module '@hapi/joi' {
         optional(): this;
     }
 
-    interface BoxStringSchema<N extends BoxSchema> extends joi.StringSchema {
+    interface BoxStringSchema<N extends BoxSchema> extends Joi.StringSchema {
         __schemaTypeLiteral: 'BoxStringSchema';
 
         default<T extends string>(
@@ -133,7 +133,7 @@ declare module '@hapi/joi' {
         optional(): this;
     }
 
-    interface BoxNumberSchema<N extends BoxSchema> extends joi.NumberSchema {
+    interface BoxNumberSchema<N extends BoxSchema> extends Joi.NumberSchema {
         __schemaTypeLiteral: 'BoxNumberSchema';
 
         default<T extends number>(
@@ -148,10 +148,10 @@ declare module '@hapi/joi' {
         allow(...values: any[]): this;
         allow(values: any[]): this;
 
-        valid<T extends string>(
+        valid<T extends number>(
             ...values: T[]
         ): this extends BoxNumberSchema<infer B> ? BoxNumberSchema<BoxType<B, T>> : never;
-        valid<T extends string>(
+        valid<T extends number>(
             values: T[],
         ): this extends BoxNumberSchema<infer B> ? BoxNumberSchema<BoxType<B, T>> : never;
         valid(...values: any[]): this;
@@ -165,7 +165,7 @@ declare module '@hapi/joi' {
         optional(): this;
     }
 
-    interface BoxBooleanSchema<N extends BoxSchema> extends joi.BooleanSchema {
+    interface BoxBooleanSchema<N extends BoxSchema> extends Joi.BooleanSchema {
         __schemaTypeLiteral: 'BoxBooleanSchema';
 
         default<T extends boolean>(
@@ -197,7 +197,7 @@ declare module '@hapi/joi' {
         optional(): this;
     }
 
-    interface BoxDateSchema<N extends BoxSchema> extends joi.DateSchema {
+    interface BoxDateSchema<N extends BoxSchema> extends Joi.DateSchema {
         __schemaTypeLiteral: 'BoxDateSchema';
 
         default<T extends Date>(
@@ -229,7 +229,7 @@ declare module '@hapi/joi' {
         optional(): this;
     }
 
-    interface BoxFunctionSchema<N extends BoxSchema> extends joi.FunctionSchema {
+    interface BoxFunctionSchema<N extends BoxSchema> extends Joi.FunctionSchema {
         __schemaTypeLiteral: 'BoxFunctionSchema';
 
         allow<T>(...values: T[]): this extends BoxFunctionSchema<infer B> ? BoxFunctionSchema<BoxUnion<B, T>> : never;
@@ -245,7 +245,7 @@ declare module '@hapi/joi' {
         optional(): this;
     }
 
-    interface BoxArraySchema<N extends BoxSchema> extends joi.ArraySchema {
+    interface BoxArraySchema<N extends BoxSchema> extends Joi.ArraySchema {
         __schemaTypeLiteral: 'BoxArraySchema';
 
         default<T extends any[]>(
@@ -265,8 +265,8 @@ declare module '@hapi/joi' {
             type: T,
         ): this extends BoxArraySchema<infer B> ? BoxArraySchema<BoxUnion<B, extractType<T>>> : never;
 
-        items(...types: joi.SchemaLike[]): this;
-        items(types: joi.SchemaLike[]): this;
+        items(...types: Joi.SchemaLike[]): this;
+        items(types: Joi.SchemaLike[]): this;
 
         required(): this extends BoxArraySchema<infer B> ? BoxArraySchema<BoxReq<B, true>> : never;
         required(): this;
@@ -276,7 +276,7 @@ declare module '@hapi/joi' {
         optional(): this;
     }
 
-    interface BoxObjectSchema<N extends BoxSchema> extends joi.ObjectSchema {
+    interface BoxObjectSchema<N extends BoxSchema> extends Joi.ObjectSchema {
         __schemaTypeLiteral: 'BoxObjectSchema';
 
         default<T extends mappedSchemaMap>(
@@ -294,12 +294,12 @@ declare module '@hapi/joi' {
         keys<T extends mappedSchemaMap>(
             schema: T,
         ): this extends BoxObjectSchema<infer B> ? BoxObjectSchema<BoxIntersection<B, extractMap<T>>> : never;
-        keys(schema?: joi.SchemaMap): this;
+        keys(schema?: Joi.SchemaMap): this;
 
         append<T extends mappedSchemaMap>(
             schema: T,
         ): this extends BoxObjectSchema<infer B> ? BoxObjectSchema<BoxIntersection<B, extractMap<T>>> : never;
-        append(schema?: joi.SchemaMap): this;
+        append(schema?: Joi.SchemaMap): this;
 
         pattern<S extends BoxStringSchema<any>, T extends mappedSchema>(
             pattern: S,
@@ -314,7 +314,7 @@ declare module '@hapi/joi' {
             ? BoxObjectSchema<BoxIntersection<B, extractMap<{ [key: string]: T }>>>
             : never;
 
-        pattern(pattern: RegExp | joi.SchemaLike, schema: joi.SchemaLike): this;
+        pattern(pattern: RegExp | Joi.SchemaLike, schema: Joi.SchemaLike): this;
 
         required(): this extends BoxObjectSchema<infer B> ? BoxObjectSchema<BoxReq<B, true>> : never;
         required(): this;
@@ -324,7 +324,7 @@ declare module '@hapi/joi' {
         optional(): this;
     }
 
-    interface BoxAlternativesSchema<N extends BoxSchema> extends joi.AlternativesSchema {
+    interface BoxAlternativesSchema<N extends BoxSchema> extends Joi.AlternativesSchema {
         __schemaTypeLiteral: 'BoxAlternativesSchema';
 
         allow<T>(
@@ -352,8 +352,8 @@ declare module '@hapi/joi' {
                 : BoxAlternativesSchema<Box<extractType<T>, false>>
             : BoxAlternativesSchema<Box<extractType<T>, false>>;
 
-        try(...types: joi.SchemaLike[]): this;
-        try(types: joi.SchemaLike[]): this;
+        try(...types: Joi.SchemaLike[]): this;
+        try(types: Joi.SchemaLike[]): this;
 
         required(): this extends BoxAlternativesSchema<infer B> ? BoxAlternativesSchema<BoxReq<B, true>> : never;
         required(): this;
@@ -371,42 +371,9 @@ declare module '@hapi/joi' {
                 : BoxAlternativesSchema<Box<extractType<T['then']> | extractType<T['otherwise']>, false>>
             : BoxAlternativesSchema<Box<extractType<T['then']> | extractType<T['otherwise']>, false>>;
 
-        when(ref: string | joi.Reference, options: joi.WhenOptions): this;
-        when(ref: joi.Schema, options: joi.WhenSchemaOptions): this;
+        when(ref: string | Joi.Reference, options: Joi.WhenOptions): this;
+        when(ref: Joi.Schema, options: Joi.WhenSchemaOptions): this;
     }
-
-    // NOTE: joi 17버전으로 올릴때 이부분을 지우면 extractType을 사용할 수 있다.
-    // Factory methods.
-    export function any<T extends any>(): BoxAnySchema<Box<T, false>>;
-
-    export function string<T extends string>(): BoxStringSchema<Box<T, false>>;
-
-    export function number<T extends number>(): BoxNumberSchema<Box<T, false>>;
-
-    export function boolean<T extends boolean>(): BoxBooleanSchema<Box<T, false>>;
-
-    export function date<T extends Date>(): BoxDateSchema<Box<T, false>>;
-
-    export function func<T extends Function>(): BoxFunctionSchema<Box<T, false>>;
-
-    export function array(): BoxArraySchema<Box<never, false>>;
-
-    export function object<T extends mappedSchemaMap>(schema?: T): BoxObjectSchema<Box<extractMap<T>, false>>;
-
-    export function alternatives<T extends mappedSchema[]>(
-        ...alts: T
-    ): BoxAlternativesSchema<Box<extractType<(typeof alts)[number]>, false>>;
-    export function alternatives<T extends mappedSchema[]>(
-        alts: T,
-    ): BoxAlternativesSchema<Box<extractType<(typeof alts)[number]>, false>>;
-
-    export function alt<T extends mappedSchema[]>(
-        ...alts: T
-    ): BoxAlternativesSchema<Box<extractType<(typeof alts)[number]>, false>>;
-    export function alt<T extends mappedSchema[]>(
-        alts: T,
-    ): BoxAlternativesSchema<Box<extractType<(typeof alts)[number]>, false>>;
-    // 여기까지
 
     type maybeExtractBox<T> = T extends Box<infer O, infer R> ? O : T;
 
@@ -457,7 +424,7 @@ declare module '@hapi/joi' {
                             ? maybeExtractBox<O>
                             : T extends BoxAlternativesSchema<infer O>
                               ? maybeExtractBox<O>
-                              : T extends joi.AnySchema
+                              : T extends Joi.AnySchema
                                 ? any
                                 : any;
 
@@ -471,7 +438,7 @@ declare module '@hapi/joi' {
          * ```
          */
         T extends Array<infer O>
-            ? O extends joi.SchemaLike
+            ? O extends Joi.SchemaLike
                 ? extractOne<O>
                 : O extends BoxedPrimitive
                   ? extractOne<O>
@@ -486,7 +453,7 @@ declare module '@hapi/joi' {
               : /**
                  * This is the base case for every schema implemented
                  */
-                T extends joi.SchemaLike
+                T extends Joi.SchemaLike
                 ? extractOne<T>
                 : T extends BoxedPrimitive
                   ? extractOne<T>
