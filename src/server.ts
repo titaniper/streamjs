@@ -33,10 +33,11 @@ async function initKafkaEventPipeline() {
         name: config.kafka.clientId,
         topics: [
             'debezium.ben.ddd_event',
+            'debezium.ben.all.ddd_event',
+            'ben.internal.event',
             'debezium.prefixA.ddd_event',
             'debezium.prefixB.ddd_event',
             'debezium.kill.ddd_event',
-            'debezium.prefixB.ddd_event',
         ],
         kafka: {
             brokers: config.kafka.brokers,
