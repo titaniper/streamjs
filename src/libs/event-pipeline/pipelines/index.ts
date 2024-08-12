@@ -1,0 +1,1 @@
+export { KafkaEventPipeline } from './kafka';

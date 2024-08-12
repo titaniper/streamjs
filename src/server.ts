@@ -1,11 +1,13 @@
 import * as gracefulShutdown from 'http-graceful-shutdown';
 import app from './app';
 import { config } from './config';
-import { KafkaConnect } from './libs/kafka/connect';
+import { KafkaEventPipeline } from './libs/event-pipeline/pipelines/kafka';
+import { PrefixProcessor } from './libs/event-pipeline/processors';
+import { ExternalDddEventRouter, InternalDddEventRouter } from './libs/event-pipeline/routers';
 
 async function main() {
-    const connect = await initKafkaConnect();
-    await connect.start();
+    const kafkaEventPipeline = await initKafkaEventPipeline();
+    await kafkaEventPipeline.start();
 
     const port = config.server.port;
     const server = app.listen(port);
@@ -15,7 +17,7 @@ async function main() {
         timeout: 30000,
         onShutdown: async () => {
             console.log('The server shuts down when the connection is cleaned up.');
-            await connect.stop();
+            await kafkaEventPipeline.stop();
         },
         finally: () => {
             console.log('bye 👋');
@@ -26,22 +28,30 @@ async function main() {
     console.log(`Server running on port ${port}`);
 }
 
-async function initKafkaConnect() {
-    return new KafkaConnect({
+async function initKafkaEventPipeline() {
+    const eventPipeline = new KafkaEventPipeline({
         name: config.kafka.clientId,
+        topics: [
+            'debezium.ben.ddd_event',
+        ],
         kafka: {
-            bootstraps: config.kafka.brokers,
-        },
-        connect: {
-            topics: [
-                'debezium.ben.ddd_event',
-            ],
-            route: {},
-            transform: {
-                prefix: {},
-            },
+            brokers: config.kafka.brokers,
         },
     });
+
+    eventPipeline.addProcessor(new PrefixProcessor([{ topic: 'debezium.tycoon.ddd_event', prefix: 'Dashboard' }]));
+    eventPipeline.addRoute(new InternalDddEventRouter());
+    eventPipeline.addRoute(new ExternalDddEventRouter({
+        rules: [
+            {
+                sourceTopic: 'debezium.tycoon.ddd_event',
+                filteringEvent: ['UserCreatedEvent', 'UserUpdatedEvent'],
+                sinkTopic: 'haulla.external.ddd_event',
+            }
+        ]
+    }));
+
+    return eventPipeline;
 }
 
 main();
