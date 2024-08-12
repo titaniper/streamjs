@@ -33,20 +33,28 @@ async function initKafkaEventPipeline() {
         name: config.kafka.clientId,
         topics: [
             'debezium.ben.ddd_event',
+            'debezium.prefixA.ddd_event',
+            'debezium.prefixB.ddd_event',
+            'debezium.kill.ddd_event',
+            'debezium.prefixB.ddd_event',
         ],
         kafka: {
             brokers: config.kafka.brokers,
         },
     });
 
-    eventPipeline.addProcessor(new PrefixProcessor([{ topic: 'debezium.tycoon.ddd_event', prefix: 'Dashboard' }]));
+    eventPipeline.addProcessor(new PrefixProcessor([{ topic: 'debezium.prefixA.ddd_event', prefix: 'A' }, { topic: 'debezium.prefixB.ddd_event', prefix: 'B' }]));
     eventPipeline.addRoute(new InternalDddEventRouter());
     eventPipeline.addRoute(new ExternalDddEventRouter({
         rules: [
             {
-                sourceTopic: 'debezium.tycoon.ddd_event',
-                filteringEvent: ['UserCreatedEvent', 'UserUpdatedEvent'],
-                sinkTopic: 'haulla.external.ddd_event',
+                sourceTopic: 'debezium.ben.ddd_event',
+                filteringEvent: ['ExternalEvent'],
+                sinkTopic: 'ben.extenral.event',
+            },
+            {
+                sourceTopic: 'debezium.ben.all.ddd_event',
+                sinkTopic: 'ben.extenral.event',
             }
         ]
     }));

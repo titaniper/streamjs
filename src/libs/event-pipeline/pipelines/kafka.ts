@@ -33,15 +33,17 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
         try {
             for (const record of records) {
                 const sinkTopics = await this.getSinkTopics(record);
-                const processedMessage = await this.processMessage(record);
-                await Promise.all(
-                    sinkTopics.map((topic) =>
-                        this.kafkaProducer.send({
-                            topic,
-                            messages: [processedMessage.message],
-                        }),
-                    ),
-                );
+                if (sinkTopics.length) {
+                    const processedMessage = await this.processMessage(record);
+                    await Promise.all(
+                        sinkTopics.map((topic) =>
+                            this.kafkaProducer.send({
+                                topic,
+                                messages: [processedMessage.message],
+                            }),
+                        ),
+                    );
+                }
             }
             await transaction.commit();
         } catch (error) {
