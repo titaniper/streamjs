@@ -1,4 +1,4 @@
-import * as gracefulShutdown from 'http-graceful-shutdown';
+import gracefulShutdown from 'http-graceful-shutdown';
 import app from './app';
 import { config } from './config';
 import { KafkaEventPipeline } from './libs/event-pipeline/pipelines/kafka';

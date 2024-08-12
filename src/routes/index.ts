@@ -1,6 +1,6 @@
-import * as Router from 'koa-joi-router';
+import { Router } from 'koa-x-router';
 
-export const globalRouter = Router();
+export const globalRouter = new Router();
 globalRouter.get('/ping', async (ctx: any) => {
     ctx.body = 'pong';
 });
