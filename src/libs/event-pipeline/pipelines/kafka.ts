@@ -9,32 +9,27 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
 
     private kafkaConsumer: Consumer;
 
-    private subscribedTopics: string[];
-
     constructor(config: {
         name: string;
-        topics: string[];
+        topics?: string[];
         kafka: {
             brokers: string[];
         };
     }) {
         super();
-        console.log('KafkaEventPipeline constructor', {
-            clientId: config.name,
-            brokers: config.kafka.brokers,
-        });
         this.kafkaClient = new Kafka({
             clientId: config.name,
             brokers: config.kafka.brokers,
-            retry: {
-                retries: 1,
-            },
         });
-        this.kafkaProducer = this.kafkaClient.producer({ transactionalId: config.name });
-        this.kafkaConsumer = this.kafkaClient.consumer({ groupId: config.name, retry: {
-            retries: 1,
-        } });
-        this.subscribedTopics = config.topics;
+        this.kafkaProducer = this.kafkaClient.producer({
+            transactionalId: config.name,
+            idempotent: true, // NOTE: 멱등성 기능 on.
+            maxInFlightRequests: 1, // NOTE: 프로듀서가 최대 1개의 요청만 보낼 수 있도록 설정.
+        });
+        this.kafkaConsumer = this.kafkaClient.consumer({ groupId: config.name });
+        if (config.topics) {
+            this.addSubscribedTopics(config.topics);
+        }
     }
 
     async put(records: EachMessagePayload[]): Promise<void> {
@@ -42,10 +37,8 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
         try {
             for (const record of records) {
                 const sinkTopics = await this.getSinkTopics(record);
-                console.log('sinkTopics', sinkTopics);
                 if (sinkTopics.length) {
                     const processedMessage = await this.processMessage(record);
-                    console.log('processedMessage', processedMessage.message.value);
                     await Promise.all(
                         sinkTopics.map((topic) =>
                             transaction.send({
@@ -54,26 +47,18 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
                             }),
                         ),
                     );
-
-                    // NOTE: 임시
-                    const kafkaMessage = JSON.parse(record.message.value.toString());
-                    const dddEvent = kafkaMessage.payload.after;
-                    if (dddEvent.type === 'KillEvent') {
-                        throw new Error('KillEvent');
-                    }
                 }
             }
             await transaction.commit();
-        } catch (error) {
+        } catch (err) {
             await transaction.abort();
-            console.log('error 1');
-            // logger.error('Transaction aborted due to error', { error });
-            throw error;
+            logger.error('Transaction aborted due to error', { err, tags: ['haulla', 'error'] });
+            throw err;
         }
     }
 
     private async getSinkTopics(record: EachMessagePayload): Promise<string[]> {
-        const topicsArrays = await Promise.all(this.routes.map((route) => route.process(record)));
+        const topicsArrays = await Promise.all(this.routers.map((router) => router.process(record)));
         return Array.from(new Set<string>(topicsArrays.flat()));
     }
 
@@ -87,43 +72,23 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
     }
 
     async start(): Promise<void> {
-        // NOTE: 동시에 connect 하면 에러난다.
-        // await Promise.all([this.kafkaProducer.connect(), await this.kafkaConsumer.connect()]);
         await this.kafkaProducer.connect();
         await this.kafkaConsumer.connect();
-
-        // NOTE: run 먼저 할 수 없음
-        //         signment":{},"groupProtocol":"RoundRobinAssigner","duration":8850}
-        // KafkaJSNonRetriableError: Cannot subscribe to topic while consumer is running
-        //     at Object.sub
         await this.kafkaConsumer.subscribe({
             topics: this.subscribedTopics,
             fromBeginning: false,
         });
-        // https://github.com/tulios/kafkajs/blob/master/src/consumer/runner.js#L218
-        this.kafkaConsumer.run({
+        await this.kafkaConsumer.run({
             eachMessage: async (payload) => {
-                try {
-                    await this.put([payload]);
-                } catch (error) {
-                    console.log('rrrrr consome');
-                    // throw new Error('💣')
-                    throw error
-                }
+                await this.put([payload]);
             },
-        })
-        // NOTE: 동작안함
-        .catch((error) => {
-            console.log('kafkaConsumer ererererer'); 
-        });;
-        // this.kafkaConsumer.on('error', (err) => {
-
-        // });
+        });
     }
 
     async stop(): Promise<void> {
-        await Promise.all([this.kafkaProducer.disconnect(), this.kafkaConsumer.disconnect()]);
-
+        // NOTE: producer 연결을 먼저 끊어야 한다. @see https://github.com/Ecube-Labs/haulla/pull/1131#discussion_r1714603983
+        await this.kafkaProducer.disconnect();
+        await this.kafkaConsumer.disconnect();
     }
 }
 

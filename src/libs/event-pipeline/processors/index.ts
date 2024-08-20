@@ -1,1 +1,1 @@
-export { PrefixDddEventProcessor as PrefixProcessor } from './PrefixDddEventProcessor';
+export { PrefixDddEventProcessor, PrefixDddEventProcessorRule } from './PrefixDddEventProcessor';

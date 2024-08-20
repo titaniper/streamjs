@@ -1,17 +1,17 @@
 import { EachMessagePayload } from 'kafkajs';
-import { EventProcessor } from '../processor';
+import { EventProcessor, EventProcessorRule } from '../processor';
 
-type PrefixRule = {
+interface PrefixDddEventProcessorRule extends EventProcessorRule {
     topic: string;
     prefix: string;
-};
+}
 
 class PrefixDddEventProcessor extends EventProcessor {
     private rules: Map<string, string>;
 
-    constructor(rules: PrefixRule[]) {
+    constructor(config: { rules: PrefixDddEventProcessorRule[] }) {
         super();
-        this.rules = new Map(rules.map((rule) => [rule.topic, rule.prefix]));
+        this.rules = new Map(config.rules.map((rule) => [rule.topic, rule.prefix]));
     }
 
     async process(record: EachMessagePayload) {
@@ -42,4 +42,4 @@ class PrefixDddEventProcessor extends EventProcessor {
     }
 }
 
-export { PrefixDddEventProcessor };
+export { PrefixDddEventProcessor, PrefixDddEventProcessorRule };
