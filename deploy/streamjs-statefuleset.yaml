@@ -8,7 +8,7 @@ metadata:
     app: streamjs
 spec:
   serviceName: "streamjs"
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: streamjs
@@ -16,12 +16,16 @@ spec:
     metadata:
       labels:
         app: streamjs
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: '/metrics'
+        prometheus.io/port: '3000'
     spec:
       containers:
       - name: streamjs
         image: devjyk/streamjs:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 3000
         resources:
           limits:
             cpu: 500m
