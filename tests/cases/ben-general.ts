@@ -1,6 +1,5 @@
 import { Kafka } from 'kafkajs';
-import { eventPass } from '../events/external-pass';
-import { eventTarget } from '../events/external-target';
+import { internalMetadata } from '../events/ben-general';
 
 const brokers = [`kafka-kafka-bootstrap.streaming.svc.cluster.local:9092`]
 
@@ -38,32 +37,10 @@ const run = async () => {
           payload: {
               id: 1424821,
           },
-      }),
-      value: JSON.stringify(eventPass), 
-    }, {
-        headers: {
-          name: 'test',
-        },
-        key: JSON.stringify({
-          schema: {
-              type: 'struct',
-              fields: [
-                  {
-                      type: 'int64',
-                      optional: false,
-                      field: 'id',
-                  },
-              ],
-              optional: false,
-              name: 'debezium.ben.ddd_event.Key',
-          },
-          payload: {
-              id: 1424821,
-          },
-      }),
-      value: JSON.stringify(eventTarget), 
-    }],
-    // compression: CompressionTypes.ZSTD,
+        }),
+        value: JSON.stringify(internalMetadata), 
+      }
+    ],
   })
 }
 

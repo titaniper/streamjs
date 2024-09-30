@@ -63,7 +63,7 @@ export const internalMetadata = {
                     },
                 ],
                 optional: true,
-                name: 'debezium.haulla.ddd_event.Value',
+                name: 'debezium.ben.ddd_event.Value',
                 field: 'before',
             },
             {
@@ -119,7 +119,7 @@ export const internalMetadata = {
                     },
                 ],
                 optional: true,
-                name: 'debezium.haulla.ddd_event.Value',
+                name: 'debezium.ben.ddd_event.Value',
                 field: 'after',
             },
             {
@@ -254,7 +254,7 @@ export const internalMetadata = {
         before: null,
         after: {
             id: 1304926,
-            type: 'InternalEvent',
+            type: 'GeneralEvent',
             occurredAt: 1721884234000,
             txId: 'd02352dd-9ea9-4ce8-a936-b83aec160e73',
             createdAt: 1721884234070590,

@@ -4,4 +4,6 @@ abstract class EventProcessor {
     abstract process(record: EachMessagePayload): Promise<EachMessagePayload>;
 }
 
-export { EventProcessor };
+interface EventProcessorRule {}
+
+export { EventProcessor, EventProcessorRule };
