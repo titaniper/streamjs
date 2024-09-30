@@ -1,6 +1,8 @@
 import { Consumer, EachMessagePayload, Kafka, Producer } from 'kafkajs';
 import { logger } from '../../logger';
 import { EventPipeline } from '../pipeline';
+import { monitorKafkaJSConsumer, monitorKafkaJSProducer } from '@christiangalsterer/kafkajs-prometheus-exporter';
+import { register } from '../../../libs/metrics';
 
 class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
     private kafkaClient: Kafka;
@@ -30,6 +32,11 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
         if (config.topics) {
             this.addSubscribedTopics(config.topics);
         }
+
+        // TODO: 개선
+        monitorKafkaJSProducer(this.kafkaProducer, register, { defaultLabels: { name: config.name } })
+        monitorKafkaJSConsumer(this.kafkaConsumer, register, { defaultLabels: { name: config.name } })
+
     }
 
     async put(records: EachMessagePayload[]): Promise<void> {

@@ -1,4 +1,6 @@
 import gracefulShutdown from 'http-graceful-shutdown';
+import { Registry, collectDefaultMetrics } from "prom-client";
+import { monitorKafkaJSProducer, monitorKafkaJSConsumer, monitorKafkaJSAdmin } from "@christiangalsterer/kafkajs-prometheus-exporter";
 import app from './app';
 import { config } from './config';
 import { KafkaEventPipeline } from './libs/event-pipeline/pipelines/kafka';
