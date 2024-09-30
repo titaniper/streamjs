@@ -2,9 +2,8 @@ import { Kafka } from 'kafkajs';
 import { eventPass } from '../events/external-pass';
 import { eventTarget } from '../events/external-target';
 import { eventTargetInternal } from '../events/external-target-internal';
-import { internalMetadata } from '../events/internal-metadata';
+import { internalMetadata } from '../events/ben-general';
 import { internalNoMetadata } from '../events/internal-nometadata';
-import { internalKill } from '../events/internal-kill-a';
 
 const brokers = [`kafka-kafka-bootstrap.streaming.svc.cluster.local:9092`]
 
@@ -20,7 +19,7 @@ const run = async () => {
   // Producing
   await producer.connect()
   await producer.send({
-    topic: 'debezium.kill.ddd_event',
+    topic: 'debezium.ben.ddd_event',
     messages: [
       {
         headers: {
@@ -67,29 +66,6 @@ const run = async () => {
           },
         }),
         value: JSON.stringify(internalMetadata), 
-      },
-      {
-        headers: {
-          name: 'test',
-        },
-        key: JSON.stringify({
-          schema: {
-              type: 'struct',
-              fields: [
-                  {
-                      type: 'int64',
-                      optional: false,
-                      field: 'id',
-                  },
-              ],
-              optional: false,
-              name: 'debezium.ben.ddd_event.Key',
-          },
-          payload: {
-              id: 1424821,
-          },
-        }),
-        value: JSON.stringify(internalKill), 
       },
       {
         headers: {

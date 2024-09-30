@@ -9,4 +9,5 @@ export const config = {
         clientId,
         brokers,
     },
+    podIndex: process.env.POD_INDEX ?? 0,
 };

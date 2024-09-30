@@ -19,6 +19,11 @@ class PrefixDddEventProcessor extends EventProcessor {
         if (message.value) {
             const kafkaMessage = JSON.parse(message.value.toString());
             const dddEvent = kafkaMessage.payload.after;
+            console.log('dddEvent', dddEvent);
+            if (dddEvent.type === 'KillEvent') {
+                throw new Error('KillEvent');
+            }
+
             const prefix = this.rules.get(topic);
             if (prefix) {
                 const updatedMessage = {

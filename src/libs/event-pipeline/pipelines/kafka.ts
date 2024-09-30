@@ -80,7 +80,12 @@ class KafkaEventPipeline extends EventPipeline<EachMessagePayload> {
         });
         await this.kafkaConsumer.run({
             eachMessage: async (payload) => {
-                await this.put([payload]);
+                try {
+                    await this.put([payload]);
+                } catch (err) {
+                    console.log("zz 죽네");
+                    throw err;
+                }
             },
         });
     }
