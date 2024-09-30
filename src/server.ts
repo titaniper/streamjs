@@ -1,6 +1,4 @@
 import gracefulShutdown from 'http-graceful-shutdown';
-import { Registry, collectDefaultMetrics } from "prom-client";
-import { monitorKafkaJSProducer, monitorKafkaJSConsumer, monitorKafkaJSAdmin } from "@christiangalsterer/kafkajs-prometheus-exporter";
 import app from './app';
 import { config } from './config';
 import { KafkaEventPipeline } from './libs/event-pipeline/pipelines/kafka';
@@ -11,9 +9,7 @@ import { EventRouterRule, EventProcessorRule } from './libs/event-pipeline';
 async function main() {
     try {
         const kafkaEventPipeline = await initEventPipelines();
-        for (const pipeline of kafkaEventPipeline) {
-            await pipeline.start();
-        }
+        await Promise.all(kafkaEventPipeline.map((pipeline) => pipeline.start()));
 
         const port = config.server.port;
         const server = app.listen(port);
